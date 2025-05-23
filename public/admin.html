@@ -1,0 +1,42 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel</title>
+</head>
+<body>
+  <h1>Add Product</h1>
+  <form id="product-form">
+    <input type="text" id="name" placeholder="Name" required><br>
+    <input type="number" id="price" placeholder="Price" required><br>
+    <input type="text" id="image" placeholder="Image URL"><br>
+    <input type="text" id="quantity" placeholder="Quantity" required><br>
+    <input type="text" id="category" placeholder="Category" required><br>
+    <button type="submit">Add Product</button>
+  </form>
+
+  <script>
+    const API_URL = "https://product-management-9vdw.onrender.com/products";
+    document.getElementById('product-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const product = {
+        name: document.getElementById('name').value,
+        price: parseFloat(document.getElementById('price').value),
+        image: document.getElementById('image').value,
+        quantity: document.getElementById('quantity').value,
+        category: document.getElementById('category').value
+      };
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(product)
+      });
+      if (res.ok) {
+        alert('Product added successfully!');
+        document.getElementById('product-form').reset();
+      }
+    });
+  </script>
+</body>
+</html>
