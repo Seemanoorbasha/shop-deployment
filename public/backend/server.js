@@ -7,9 +7,9 @@ const { v4: uuidv4 } = require("uuid");
 const mysql = require("mysql");
 
 
-
 const app = express();
 const PORT = process.env.PORT || 3000; // Use dynamic port or 3000 locally
+
 
 // Use environment variables for DB connection, fallback to local defaults
 const db = mysql.createConnection({
