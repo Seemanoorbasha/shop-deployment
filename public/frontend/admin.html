@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <h1>Admin Panel</h1>
+  <a href="index.html" class="nav-link">View Frontend Page</a>
+
+  <div class="admin-form">
+    <h2>Add/Edit Product</h2>
+    <div class="form-group">
+      <label for="productName">Product Name:</label>
+      <input type="text" id="productName" required />
+    </div>
+    <div class="form-group">
+      <label for="productPrice">Price :</label>
+      <input type="number" id="productPrice" step="0.01" required />
+    </div>
+    <div class="form-group">
+      <label for="productImage">Image URL:</label>
+      <input type="text" id="productImage" placeholder="https://example.com/image.jpg" />
+    </div>
+    <div class="form-group">
+      <label for="productQuantity">Quantity (e.g., 500g):</label>
+      <input type="text" id="productQuantity" placeholder="e.g., 500g" />
+    </div>
+    <div class="form-group">
+      <label for="productCategory">Category:</label>
+      <select id="productCategory">
+        <option value="pickles">Pickles</option>
+        <option value="snacks">Snacks</option>
+      </select>
+    </div>
+    <button onclick="saveProduct()">Save Product</button>
+  </div>
+
+  <h2>Current Products</h2>
+  <div class="product-grid" id="adminProductContainer"></div>
+
+  <script>
+    const API_URL = "/products";
+    let currentEditId = null;
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      await displayProducts();
+    });
+
+    async function displayProducts() {
+      try {
+        const products = await getProducts();
+        const container = document.getElementById("adminProductContainer");
+
+        if (products.length === 0) {
+          container.innerHTML = "<p>No products added yet.</p>";
+          return;
+        }
+
+        container.innerHTML = products.map(product => `
+          <div class="product-card">
+            <img src="${product.image || 'https://via.placeholder.com/250'}" alt="${product.name}">
+            <h3>${product.name}</h3>
+            <p><strong>Price: ₹${product.price}</strong></p>
+            <p>Quantity: ${product.quantity || 'N/A'}</p>
+            <p class="category-tag">${product.category}</p>
+            <button class="edit-btn" onclick="editProduct('${product.id}')">Edit</button>
+            <button class="delete-btn" onclick="deleteProduct('${product.id}')">Delete</button>
+          </div>`).join('');
+      } catch (error) {
+        console.error("Error displaying products:", error);
+        alert("Failed to load products");
+      }
+    }
+
+    async function getProducts() {
+      try {
+        const response = await fetch(API_URL);
+        if (!response.ok) throw new Error("Network response was not ok");
+        return await response.json();
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        return [];
+      }
+    }
+
+    async function saveProduct() {
+      const name = document.getElementById("productName").value;
+      const price = document.getElementById("productPrice").value;
+      const image = document.getElementById("productImage").value;
+      const quantity = document.getElementById("productQuantity").value;
+      const category = document.getElementById("productCategory").value;
+
+      if (!name || !price) {
+        alert("Please fill all required fields");
+        return;
+      }
+
+      const productData = {
+        name,
+        price: parseFloat(price),
+        image,
+        quantity,
+        category
+      };
+
+      try {
+        if (currentEditId !== null) {
+          await fetch(`${API_URL}/${currentEditId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(productData)
+          });
+          currentEditId = null;
+        } else {
+          await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(productData)
+          });
+        }
+
+        // Reset form
+        document.getElementById("productName").value = "";
+        document.getElementById("productPrice").value = "";
+        document.getElementById("productImage").value = "";
+        document.getElementById("productQuantity").value = "";
+        document.getElementById("productCategory").value = "pickles";
+
+        await displayProducts();
+        alert("Product saved successfully!");
+      } catch (error) {
+        console.error("Error saving product:", error);
+        alert("Failed to save product");
+      }
+    }
+
+    async function editProduct(id) {
+      try {
+        const response = await fetch(`${API_URL}/${id}`);
+        const product = await response.json();
+
+        document.getElementById("productName").value = product.name;
+        document.getElementById("productPrice").value = product.price;
+        document.getElementById("productImage").value = product.image || "";
+        document.getElementById("productQuantity").value = product.quantity || "";
+        document.getElementById("productCategory").value = product.category || "pickles";
+
+        currentEditId = id;
+        document.querySelector(".admin-form").scrollIntoView({ behavior: "smooth" });
+      } catch (error) {
+        console.error("Error editing product:", error);
+        alert("Failed to load product for editing");
+      }
+    }
+
+    async function deleteProduct(id) {
+      if (!confirm("Are you sure you want to delete this product?")) return;
+
+      try {
+        await fetch(`${API_URL}/${id}`, {
+          method: "DELETE"
+        });
+        await displayProducts();
+      } catch (error) {
+        console.error("Error deleting product:", error);
+        alert("Failed to delete product");
+      }
+    }
+  </script>
+</body>
+
+</html>
