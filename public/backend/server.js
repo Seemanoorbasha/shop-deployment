@@ -1,7 +1,10 @@
+require('dotenv').config();
 const express = require("express");
 const cors = require("cors");
 const { v4: uuidv4 } = require("uuid");
 const mysql = require("mysql");
+
+
 
 const app = express();
 const PORT = process.env.PORT || 3000; // Use dynamic port or 3000 locally
@@ -13,6 +16,7 @@ const db = mysql.createConnection({
   password: process.env.DB_PASS || "", 
   database: process.env.DB_NAME || "shop",
 });
+
 
 db.connect((err) => {
   if (err) {
